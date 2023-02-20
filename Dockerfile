@@ -5,7 +5,11 @@ FROM python:3.8-slim-buster
 WORKDIR /python-docker
 
 COPY requirements.txt requirements.txt
-RUN sudo apt install tesseract-ocr
+
+RUN apt-get update -qqy && apt-get install -qqy \
+        tesseract-ocr \
+        libtesseract-dev
+
 RUN pip3 install -r requirements.txt
 
 COPY . .
