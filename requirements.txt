@@ -3,3 +3,5 @@ python-dotenv
 numpy
 pandas
 pyjwt
+prophet
+pytesseract
