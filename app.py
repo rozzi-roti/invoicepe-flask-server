@@ -12,10 +12,10 @@ import tokenize
 import pandas as pd
 import numpy as np
 from pandas import json_normalize
-from prophet import Prophet
 from PIL import Image
 import pytesseract
-
+from sktime.forecasting.fbprophet import Prophet
+import pytesseract
 
 app = Flask(__name__)
 
@@ -74,102 +74,108 @@ def validateUpload(_):
     partnershipIndex = checkString.find("partnership")
     companyNameIndex = checkString.find(companyNameString)
 
-    if (deedIndex != -1 & partnershipIndex != -1 & companyNameIndex != -1):
+    if (companyNameIndex == -1):
         return make_response({"success": True, "message": "Image File Validated", "information": extractedInformation})
     else: 
         return make_response({"success": False, "message": "Image File Invalid", "information": extractedInformation})
    
-   
+
+def make_forecast(data):
+  df = json_normalize(data)
+  
+  # Drop Irrelevant Index Column
+  df = df.drop(["index"], axis=1)
+
+  # Get a list of all the columns
+  column_list = df.columns
+
+  # Create a list of exogenous variables
+  exogenous_column_list = []
+
+  for x in column_list:
+    if x == "date" or x == "pred":
+      continue
+    else:
+      exogenous_column_list.append(x)
+
+  if len(exogenous_column_list) > 0:
+
+    df['date']= pd.to_datetime(df['date'], format="%d/%m/%Y")
+    df = df.set_index('date')
+
+    x = df.loc[:, exogenous_column_list]
+    df = df.drop(exogenous_column_list, axis=1)
+
+    df = df.squeeze(axis=1)
+    x = x.squeeze(axis=1)
+
+    df.index = pd.DatetimeIndex(df.index).to_period('M')
+    x.index = pd.DatetimeIndex(x.index).to_period('M')
+
+    fh = np.arange(5) + 1 
+
+    # Train the Prophet model with exogenous data
+    exogenousForecaster = Prophet(add_country_holidays={"country_name": "India"}, seasonality_mode='additive', n_changepoints=4, yearly_seasonality=False, weekly_seasonality=True, daily_seasonality=False, add_seasonality={"name": 'monthly', "period": 30.5, "fourier_order": 5, "mode": "additive"})
+    forecaster = Prophet( add_country_holidays={"country_name": "India"}, seasonality_mode='multiplicative', n_changepoints=4, yearly_seasonality=False, weekly_seasonality=True, daily_seasonality=False, add_seasonality={"name": 'monthly', "period": 30.5, "fourier_order": 5, "mode": "multiplicative"})
+
+    # forecaster = Prophet(mcmc_samples=1200, add_country_holidays={"country_name": "India"}, seasonality_mode='additive', n_changepoints=4, yearly_seasonality=False, weekly_seasonality=True, daily_seasonality=False, add_seasonality={"name": 'monthly', "period": 30.5, "fourier_order": 5, "mode": "additive"})
+
+    exogenousModel = exogenousForecaster.fit(x)
+    model = forecaster.fit(df, x)
+    # model = forecaster.fit(y_train)
+
+    exogenousPredictions = exogenousModel.predict(fh=fh)
+
+    predictions = model.predict_interval(fh=fh, X=exogenousPredictions, coverage=0.9)
+
+    predictions.columns = predictions.columns.to_flat_index()
+    predictions = predictions.reset_index()
+    predictions.columns = ['Date', 'Lower', 'Upper']
+
+    json_data = predictions.to_json(orient ='records')
+
+    return json_data
+
+  else:
+    df['date']= pd.to_datetime(df['date'], format="%d/%m/%Y")
+    df = df.set_index('date')
+    df = df.squeeze(axis=1)
+    df.index = pd.DatetimeIndex(df.index).to_period('M')
+    fh = np.arange(5) + 1 
+
+    forecaster = Prophet(add_country_holidays={"country_name": "India"}, seasonality_mode='additive', n_changepoints=4, yearly_seasonality=False, weekly_seasonality=True, daily_seasonality=False, add_seasonality={"name": 'monthly', "period": 30.5, "fourier_order": 5, "mode": "additive"})
+    model = forecaster.fit(df)
+    predictions = model.predict_interval(fh=fh, X=exogenousPredictions, coverage=0.9)
+
+    predictions.columns = predictions.columns.to_flat_index()
+    predictions = predictions.reset_index()
+    predictions.columns = ['Date', 'Lower', 'Upper']
+
+    json_data = predictions.to_json(orient ='records')
+
+    return json_data
+  
 @app.route('/get-forecast', methods=["POST"])
 @token_required
 def makeForecast(data):
-    data = request.json
-    monthData = None
 
-    if ("monthData" in data == False):
-        return make_response({"success": True, "message": "Welcome to forecasting route"})
-    else:
-        monthData = data["monthData"]
+    try:
+        data = request.json
+        monthData = None
 
-    class ProphetPos(Prophet):
+        if ("monthData" in data == False):
+            return make_response({"success": False, "message": "Please provide month data"})
+        else:
+            monthData = data["monthData"]
 
-        @staticmethod
-        def piecewise_linear(t, deltas, k, m, changepoint_ts):
-            """Evaluate the piecewise linear function, keeping the trend
-            positive.
+        forecast_data = make_forecast(monthData)
 
-            Parameters
-            ----------
-            t: np.array of times on which the function is evaluated.
-            deltas: np.array of rate changes at each changepoint.
-            k: Float initial rate.
-            m: Float initial offset.
-            changepoint_ts: np.array of changepoint times.
-
-            Returns
-            -------
-            Vector trend(t).
-            """
-            # Intercept changes
-            gammas = -changepoint_ts * deltas
-            # Get cumulative slope and intercept at each t
-            k_t = k * np.ones_like(t)
-            m_t = m * np.ones_like(t)
-            for s, t_s in enumerate(changepoint_ts):
-                indx = t >= t_s
-                k_t[indx] += deltas[s]
-                m_t[indx] += gammas[s]
-            trend = k_t * t + m_t
-            if max(t) <= 1:
-                return trend
-            # Add additional deltas to force future trend to be positive
-            indx_future = np.argmax(t >= 1)
-            while min(trend[indx_future:]) < 0:
-                indx_neg = indx_future + np.argmax(trend[indx_future:] < 0)
-                k_t[indx_neg:] -= k_t[indx_neg]
-                m_t[indx_neg:] -= m_t[indx_neg]
-                trend = k_t * t + m_t
-            return trend
-
-        def predict(self, df=None):
-            fcst = super().predict(df=df)
-            for col in ['yhat', 'yhat_lower', 'yhat_upper']:
-                fcst[col] = fcst[col].clip(lower=0.0)
-            return fcst
-
-    df = json_normalize(monthData)
-    df = df.drop(["index"], axis=1)
-    df.columns = ["ds", "y"]
-    df['ds'] = pd.to_datetime(df['ds'])
-    maxValue = df[['y']].max()
-    minValue = df[['y']].min()
-    df['y'] = np.log(1 + df['y'])
-    print(maxValue)
-    df["cap"] = maxValue['y'] * 1.3
-
-    model = ProphetPos(seasonality_mode='multiplicative').fit(df)
-    future = model.make_future_dataframe(periods=57, freq = 'ms')
-    future["cap"] = np.log(maxValue['y'] * 1.3) 
-    forecast = model.predict(future)
-    model.history['y'] = np.exp(model.history['y']) - 1
-
-    for col in ['yhat', 'yhat_lower', 'yhat_upper']:
-        forecast[col] = np.exp(forecast[col]) - 1
-
-    for col in ['yhat', 'yhat_lower', 'yhat_upper']:
-        forecast[col] = forecast[col].clip(lower=minValue['y']*0.8, upper=maxValue['y']*1.4)
-
-    foreCastedValues = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
-
-    foreCastedValues.tail()
-
-    returnVal = foreCastedValues.to_json(orient='records')
-
+        return make_response({"success": True, "message": "Made Forecasts successfully", "forecast": forecast_data})
+       
+    except Exception as e:
+        print(e)
+        return make_response({"success": False, "message": "Error Occured", "forecast": "a"})
     
-    print(foreCastedValues)
-
-
-    return make_response({"success": True, "message": "Welcome to forecasting route", "data": returnVal})
 
 
 if __name__ == "__main__":

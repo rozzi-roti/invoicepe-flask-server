@@ -1,0 +1,5 @@
+[console_scripts]
+seasonal = seasonal.application:seasonal_cmd [csv]
+seasonal.periodogram = seasonal.application:periodogram_cmd [csv]
+seasonal.trend = seasonal.application:trend_cmd [csv]
+

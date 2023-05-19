@@ -3,5 +3,7 @@ python-dotenv
 numpy
 pandas
 pyjwt
+Pillow
 prophet
 pytesseract
+sktime[all_extras]
