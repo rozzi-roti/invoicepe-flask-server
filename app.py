@@ -161,6 +161,7 @@ def makeForecast(data):
 
     try:
         data = request.json
+        
         monthData = None
 
         if ("monthData" in data == False):
@@ -169,7 +170,7 @@ def makeForecast(data):
             monthData = data["monthData"]
 
         forecast_data = make_forecast(monthData)
-
+        
         return make_response({"success": True, "message": "Made Forecasts successfully", "forecast": forecast_data})
        
     except Exception as e:
