@@ -125,137 +125,168 @@ def process_dataframe(df, min_value):
 
 
 def make_forecast(data):
-    sys.setrecursionlimit(5000)
-    df = json_normalize(data)
+    try:
 
-    # Drop Irrelevant Index Column
-    df = df.drop(["index"], axis=1)
+        sys.setrecursionlimit(5000)
+        df = json_normalize(data)
 
-    # Get a list of all the columns
-    column_list = df.columns
+        # Drop Irrelevant Index Column
+        df = df.drop(["index"], axis=1)
 
-    # Create a list of exogenous variables
-    exogenous_column_list = []
+        # Get a list of all the columns
+        column_list = df.columns
 
-    for x in column_list:
-        if x == "date" or x == "pred":
-            continue
-        else:
-            exogenous_column_list.append(x)
+        # Create a list of exogenous variables
+        exogenous_column_list = []
 
-    if len(exogenous_column_list) > 0:
-        df["date"] = pd.to_datetime(df["date"], format="%d/%m/%Y")
-        min = df["pred"].mean() / (len(df["pred"]))
-        df = df.set_index("date")
+        try:
+            try:
+                for x in column_list:
+                    if x == "date" or x == "pred":
+                        continue
+                    else:
+                        exogenous_column_list.append(x)
+            except Exception as e:
+                print(e)
+                return make_response(
+                   {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while appending to exogenous" }
+                )
+                
 
-        x = df.loc[:, exogenous_column_list]
-        df = df.drop(exogenous_column_list, axis=1)
+            if len(exogenous_column_list) > 0:
+                df["date"] = pd.to_datetime(df["date"], format="%d/%m/%Y")
+                min = df["pred"].mean() / (len(df["pred"]))
+                df = df.set_index("date")
 
-        df = df.squeeze(axis=1)
-        x = x.squeeze(axis=1)
+                x = df.loc[:, exogenous_column_list]
+                df = df.drop(exogenous_column_list, axis=1)
 
-        df.index = pd.DatetimeIndex(df.index).to_period("M")
-        x.index = pd.DatetimeIndex(x.index).to_period("M")
+                df = df.squeeze(axis=1)
+                x = x.squeeze(axis=1)
 
-        fh = np.arange(5) + 1
+                df.index = pd.DatetimeIndex(df.index).to_period("M")
+                x.index = pd.DatetimeIndex(x.index).to_period("M")
 
-        # Train the Prophet model with exogenous data
-        exogenousForecaster = Prophet(
-            add_country_holidays={"country_name": "India"},
-            seasonality_mode="additive",
-            n_changepoints=4,
-            yearly_seasonality=False,
-            weekly_seasonality=True,
-            daily_seasonality=False,
-            add_seasonality={
-                "name": "monthly",
-                "period": 30.5,
-                "fourier_order": 5,
-                "mode": "additive",
-            },
+                fh = np.arange(5) + 1
+
+                # Train the Prophet model with exogenous data
+                exogenousForecaster = Prophet(
+                    add_country_holidays={"country_name": "India"},
+                    seasonality_mode="additive",
+                    n_changepoints=4,
+                    yearly_seasonality=False,
+                    weekly_seasonality=True,
+                    daily_seasonality=False,
+                    add_seasonality={
+                        "name": "monthly",
+                        "period": 30.5,
+                        "fourier_order": 5,
+                        "mode": "additive",
+                    },
+                )
+
+                forecaster = Prophet(
+                    add_country_holidays={"country_name": "India"},
+                    seasonality_mode="multiplicative",
+                    n_changepoints=4,
+                    yearly_seasonality=False,
+                    weekly_seasonality=True,
+                    daily_seasonality=False,
+                    add_seasonality={
+                        "name": "monthly",
+                        "period": 30.5,
+                        "fourier_order": 5,
+                        "mode": "multiplicative",
+                    },
+                )
+
+                # forecaster = Prophet(mcmc_samples=1200, add_country_holidays={"country_name": "India"}, seasonality_mode='additive', n_changepoints=4, yearly_seasonality=False, weekly_seasonality=True, daily_seasonality=False, add_seasonality={"name": 'monthly', "period": 30.5, "fourier_order": 5, "mode": "additive"})
+
+                try:
+                    exogenousModel = exogenousForecaster.fit(x)
+                    model = forecaster.fit(df, x)
+                    # model = forecaster.fit(y_train)
+
+                    exogenousPredictions = exogenousModel.predict(fh=fh)
+
+                    predictions = model.predict_interval(
+                        fh=fh, X=exogenousPredictions, coverage=0.9
+                    )
+
+                    predictions.columns = predictions.columns.to_flat_index()
+                    predictions = predictions.reset_index()
+                    predictions.columns = ["Date", "Lower", "Upper"]
+
+                    predictions = process_dataframe(predictions, min)
+
+                    json_data = predictions.to_json(orient="records")
+
+                    return json_data
+
+
+                except Exception as e:
+                    print(e)
+                    return make_response(
+                        {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while generating predictions" }
+                    )
+                
+
+               
+            else:
+                df["date"] = pd.to_datetime(df["date"], format="%d/%m/%Y")
+                df = df.set_index("date")
+                min = df["pred"].mean() / (len(df["pred"]))
+
+                df = df.drop(exogenous_column_list, axis=1)
+
+                df = df.squeeze(axis=1)
+
+                df.index = pd.DatetimeIndex(df.index).to_period("M")
+
+                fh = np.arange(5) + 1
+
+                # Train the Prophet model with exogenous data
+                forecaster = Prophet(
+                    add_country_holidays={"country_name": "India"},
+                    seasonality_mode="multiplicative",
+                    n_changepoints=4,
+                    yearly_seasonality=False,
+                    weekly_seasonality=True,
+                    daily_seasonality=False,
+                    add_seasonality={
+                        "name": "monthly",
+                        "period": 30.5,
+                        "fourier_order": 5,
+                        "mode": "multiplicative",
+                    },
+                )
+
+                # forecaster = Prophet(mcmc_samples=1200, add_country_holidays={"country_name": "India"}, seasonality_mode='additive', n_changepoints=4, yearly_seasonality=False, weekly_seasonality=True, daily_seasonality=False, add_seasonality={"name": 'monthly', "period": 30.5, "fourier_order": 5, "mode": "additive"})
+
+                model = forecaster.fit(df)
+                # model = forecaster.fit(y_train)
+
+                predictions = model.predict_interval(fh=fh, coverage=0.9)
+
+                predictions.columns = predictions.columns.to_flat_index()
+                predictions = predictions.reset_index()
+                predictions.columns = ["Date", "Lower", "Upper"]
+
+                predictions = process_dataframe(predictions, min)
+
+                json_data = predictions.to_json(orient="records")
+
+                return json_data
+        except Exception as e:
+            print(e)
+            return make_response(
+                {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while make_forecast" }
+            )
+    except Exception as e:
+        print(e)
+        return make_response(
+            {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while make_forecast" }
         )
-        forecaster = Prophet(
-            add_country_holidays={"country_name": "India"},
-            seasonality_mode="multiplicative",
-            n_changepoints=4,
-            yearly_seasonality=False,
-            weekly_seasonality=True,
-            daily_seasonality=False,
-            add_seasonality={
-                "name": "monthly",
-                "period": 30.5,
-                "fourier_order": 5,
-                "mode": "multiplicative",
-            },
-        )
-
-        # forecaster = Prophet(mcmc_samples=1200, add_country_holidays={"country_name": "India"}, seasonality_mode='additive', n_changepoints=4, yearly_seasonality=False, weekly_seasonality=True, daily_seasonality=False, add_seasonality={"name": 'monthly', "period": 30.5, "fourier_order": 5, "mode": "additive"})
-
-        exogenousModel = exogenousForecaster.fit(x)
-        model = forecaster.fit(df, x)
-        # model = forecaster.fit(y_train)
-
-        exogenousPredictions = exogenousModel.predict(fh=fh)
-
-        predictions = model.predict_interval(
-            fh=fh, X=exogenousPredictions, coverage=0.9
-        )
-
-        predictions.columns = predictions.columns.to_flat_index()
-        predictions = predictions.reset_index()
-        predictions.columns = ["Date", "Lower", "Upper"]
-
-        predictions = process_dataframe(predictions, min)
-
-        json_data = predictions.to_json(orient="records")
-
-        return json_data
-
-    else:
-        df["date"] = pd.to_datetime(df["date"], format="%d/%m/%Y")
-        df = df.set_index("date")
-        min = df["pred"].mean() / (len(df["pred"]))
-
-        df = df.drop(exogenous_column_list, axis=1)
-
-        df = df.squeeze(axis=1)
-
-        df.index = pd.DatetimeIndex(df.index).to_period("M")
-
-        fh = np.arange(5) + 1
-
-        # Train the Prophet model with exogenous data
-        forecaster = Prophet(
-            add_country_holidays={"country_name": "India"},
-            seasonality_mode="multiplicative",
-            n_changepoints=4,
-            yearly_seasonality=False,
-            weekly_seasonality=True,
-            daily_seasonality=False,
-            add_seasonality={
-                "name": "monthly",
-                "period": 30.5,
-                "fourier_order": 5,
-                "mode": "multiplicative",
-            },
-        )
-
-        # forecaster = Prophet(mcmc_samples=1200, add_country_holidays={"country_name": "India"}, seasonality_mode='additive', n_changepoints=4, yearly_seasonality=False, weekly_seasonality=True, daily_seasonality=False, add_seasonality={"name": 'monthly', "period": 30.5, "fourier_order": 5, "mode": "additive"})
-
-        model = forecaster.fit(df)
-        # model = forecaster.fit(y_train)
-
-        predictions = model.predict_interval(fh=fh, coverage=0.9)
-
-        predictions.columns = predictions.columns.to_flat_index()
-        predictions = predictions.reset_index()
-        predictions.columns = ["Date", "Lower", "Upper"]
-
-        predictions = process_dataframe(predictions, min)
-
-        json_data = predictions.to_json(orient="records")
-
-        return json_data
 
 
 def make_short_forecast(data):
@@ -393,22 +424,20 @@ def makeForecast(data):
             )
         else:
             try:
-
                 forecast_data = make_forecast(monthData)
-                    try:
-
-                        return make_response(
-                            {
-                                "success": True,
-                                "message": "Made Forecasts successfully",
-                                "forecast": forecast_data,
-                            }   
-                        )
-                    except Exception as e:
-                        print(e)
-                        return make_response(
-                            {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while generating forecast for the response data" }
-                        )
+                try:
+                    return make_response(
+                        {
+                            "success": True,
+                            "message": "Made Forecasts successfully",
+                            "forecast": forecast_data,
+                        }   
+                    )
+                except Exception as e:
+                    print(e)
+                    return make_response(
+                        {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while generating forecast for the response data" }
+                    )
 
             except Exception as e:
                 print(e)
