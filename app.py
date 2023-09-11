@@ -148,10 +148,7 @@ def make_forecast(data):
                         exogenous_column_list.append(x)
             except Exception as e:
                 print(e)
-                return make_response(
-                   {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while appending to exogenous" }
-                )
-                
+                return "$error while appending to exogenous {}".format(e)
 
             if len(exogenous_column_list) > 0:
                 df["date"] = pd.to_datetime(df["date"], format="%d/%m/%Y")
@@ -222,16 +219,11 @@ def make_forecast(data):
                     json_data = predictions.to_json(orient="records")
 
                     return json_data
-
-
                 except Exception as e:
                     print(e)
-                    return make_response(
-                        {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while generating predictions" }
-                    )
-                
-
-               
+                    
+                    return "$error while generating predictions {}".format(e)
+                            
             else:
                 df["date"] = pd.to_datetime(df["date"], format="%d/%m/%Y")
                 df = df.set_index("date")
@@ -279,14 +271,13 @@ def make_forecast(data):
                 return json_data
         except Exception as e:
             print(e)
-            return make_response(
-                {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while make_forecast" }
-            )
+            
+            return "$error while make_forecast {}".format(e)
+        
+
     except Exception as e:
         print(e)
-        return make_response(
-            {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while make_forecast" }
-        )
+        return "$error while make_forecast root {}".format(e)
 
 
 def make_short_forecast(data):
@@ -425,6 +416,7 @@ def makeForecast(data):
         else:
             try:
                 forecast_data = make_forecast(monthData)
+                print("forecast completed successfully")
                 try:
                     return make_response(
                         {
