@@ -8,7 +8,7 @@ COPY requirements.txt requirements.txt
 
 RUN apt-get update
 
-RUN apt-get install gcc
+RUN apt-get -y install gcc
 
 RUN apt-get update -qqy && apt-get install -qqy \
         tesseract-ocr \
