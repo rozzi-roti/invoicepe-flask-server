@@ -6,6 +6,8 @@ WORKDIR /python-docker
 
 COPY requirements.txt requirements.txt
 
+RUN apt-get install gcc
+
 RUN apt-get update -qqy && apt-get install -qqy \
         tesseract-ocr \
         libtesseract-dev
