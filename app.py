@@ -200,23 +200,35 @@ def make_forecast(data):
                 # forecaster = Prophet(mcmc_samples=1200, add_country_holidays={"country_name": "India"}, seasonality_mode='additive', n_changepoints=4, yearly_seasonality=False, weekly_seasonality=True, daily_seasonality=False, add_seasonality={"name": 'monthly', "period": 30.5, "fourier_order": 5, "mode": "additive"})
 
                 try:
-                    exogenousModel = exogenousForecaster.fit(x)
-                    model = forecaster.fit(df, x)
-                    # model = forecaster.fit(y_train)
+                    try:
+                        exogenousModel = exogenousForecaster.fit(x)
+                        model = forecaster.fit(df, x)
+                        # model = forecaster.fit(y_train)
 
-                    exogenousPredictions = exogenousModel.predict(fh=fh)
+                        exogenousPredictions = exogenousModel.predict(fh=fh)
 
-                    predictions = model.predict_interval(
-                        fh=fh, X=exogenousPredictions, coverage=0.9
-                    )
+                        predictions = model.predict_interval(
+                            fh=fh, X=exogenousPredictions, coverage=0.9
+                        )
+                    except Exception as e:
+                        print(e)
+                    
+                        return "$error while generating real predictions {}".format(e)
+                    
+                    
+                    try:
+                        predictions.columns = predictions.columns.to_flat_index()
+                        predictions = predictions.reset_index()
+                        predictions.columns = ["Date", "Lower", "Upper"]
 
-                    predictions.columns = predictions.columns.to_flat_index()
-                    predictions = predictions.reset_index()
-                    predictions.columns = ["Date", "Lower", "Upper"]
+                        predictions = process_dataframe(predictions, min)
 
-                    predictions = process_dataframe(predictions, min)
+                        json_data = predictions.to_json(orient="records")
+                    except Exception as e:
+                        print(e)
+                        return "$error while converting real predictions {}".format(e)
 
-                    json_data = predictions.to_json(orient="records")
+                    
 
                     return json_data
                 except Exception as e:
