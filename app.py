@@ -36,11 +36,13 @@ def token_required(f):
 
         if not token:
             return make_response({"success": False, "message": "Token not found"}, 201)
+
         try:
             data = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
         except Exception as e:
+            print(e)
             return make_response(
-                {"success": False, "message": "Error while decoding JWT", "secret", JWT_SECRET, "token": token, "error": e}, 201
+                {"success": False, "message": "Error while decoding JWT", "error": "${}".format(e)}, 201
             )
 
         return f(data, *args, **kwargs)
