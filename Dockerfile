@@ -1,6 +1,9 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.8-slim-buster
+FROM python:3.11-slim
+
+# Allow statements and log messages to immediately appear in the logs
+ENV PYTHONUNBUFFERED True
 
 WORKDIR /python-docker
 
@@ -19,4 +22,4 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
+CMD exec gunicorn --bind :5000 --workers 1 --threads 8 --timeout 0 main:app
