@@ -7,3 +7,4 @@ Pillow
 prophet
 pytesseract
 sktime[all_extras]
+wheel
