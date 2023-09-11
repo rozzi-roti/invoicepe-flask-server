@@ -1,3 +1,4 @@
+wheel
 Flask
 python-dotenv
 numpy
@@ -7,4 +8,3 @@ Pillow
 prophet
 pytesseract
 sktime[all_extras]
-wheel
