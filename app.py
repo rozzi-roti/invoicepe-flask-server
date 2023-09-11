@@ -402,7 +402,7 @@ def makeForecast(data):
     except Exception as e:
         print(e)
         return make_response(
-            {"success": False, "message": "Error Occured", "forecast": "a"}
+            {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e) }
         )
 
 
