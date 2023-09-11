@@ -22,4 +22,4 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-CMD exec unicorn --config config.py -w 8 --worker-class gevent --preload -b 0.0.0.0:5000 app:app
+CMD exec gunicorn --config config.py -w 8 --worker-class gevent --preload -b 0.0.0.0:5000 app:app
