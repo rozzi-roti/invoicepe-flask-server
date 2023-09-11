@@ -17,6 +17,7 @@ import pytesseract
 from sktime.forecasting.fbprophet import Prophet
 import pytesseract
 import random
+import sys
 
 app = Flask(__name__)
 
@@ -124,6 +125,7 @@ def process_dataframe(df, min_value):
 
 
 def make_forecast(data):
+    sys.setrecursionlimit(5000)
     df = json_normalize(data)
 
     # Drop Irrelevant Index Column
