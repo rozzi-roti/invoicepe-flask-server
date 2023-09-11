@@ -392,14 +392,29 @@ def makeForecast(data):
                 }
             )
         else:
-            forecast_data = make_forecast(monthData)
-            return make_response(
-                {
-                    "success": True,
-                    "message": "Made Forecasts successfully",
-                    "forecast": forecast_data,
-                }
-            )
+            try:
+
+                forecast_data = make_forecast(monthData)
+                    try:
+
+                        return make_response(
+                            {
+                                "success": True,
+                                "message": "Made Forecasts successfully",
+                                "forecast": forecast_data,
+                            }   
+                        )
+                    except Exception as e:
+                        print(e)
+                        return make_response(
+                            {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while generating forecast for the response data" }
+                        )
+
+            except Exception as e:
+                print(e)
+                return make_response(
+                    {"success": False, "message": "Error Occured", "forecast": "a", "error": "${}".format(e), "errorMessage": "error while generating forecast data" }
+                )
 
     except Exception as e:
         print(e)
