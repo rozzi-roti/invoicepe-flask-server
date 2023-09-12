@@ -127,7 +127,7 @@ def process_dataframe(df, min_value):
 def make_forecast(data):
     try:
 
-        sys.setrecursionlimit(5000)
+        
         df = json_normalize(data)
 
         # Drop Irrelevant Index Column
@@ -229,6 +229,7 @@ def make_forecast(data):
                             return "$error while converting real predictions and processing them. No error when creating them {}".format(e)
 
                         try: 
+                            sys.setrecursionlimit(10000)
                             json_data = predictions.to_json(orient="records")
                         except Exception as e: 
                              
