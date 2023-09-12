@@ -217,13 +217,24 @@ def make_forecast(data):
                     
                     
                     try:
-                        predictions.columns = predictions.columns.to_flat_index()
-                        predictions = predictions.reset_index()
-                        predictions.columns = ["Date", "Lower", "Upper"]
+                        try:
+                            
+                            predictions.columns = predictions.columns.to_flat_index()
+                            predictions = predictions.reset_index()
+                            predictions.columns = ["Date", "Lower", "Upper"]
 
-                        predictions = process_dataframe(predictions, min)
+                            predictions = process_dataframe(predictions, min)
+                        except Exception as e:
+                            print(e)
+                            return "$error while converting real predictions and processing them. No error when creating them {}".format(e)
 
-                        json_data = predictions.to_json(orient="records")
+                        try: 
+                            json_data = predictions.to_json(orient="records")
+                        except Exception as e: 
+                             
+                            print(e)
+                            return "$error while converting real predictions when converting them to json data{}".format(e)
+
                     except Exception as e:
                         print(e)
                         return "$error while converting real predictions {}".format(e)
