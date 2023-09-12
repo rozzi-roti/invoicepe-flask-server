@@ -230,11 +230,13 @@ def make_forecast(data):
 
                         try: 
                             sys.setrecursionlimit(10000)
-                            json_data = predictions.to_json(orient="records")
+                            print(predictions)
+                            print(sys.getrecursionlimit())
+                            json_data = predictions.to_json(default_handler=str, orient="records")
                         except Exception as e: 
                              
                             print(e)
-                            return "$error while converting real predictions when converting them to json data{}".format(e)
+                            return "$error while converting real predictions when converting them to json data{}".format(e) + "{}".format(sys.getrecursionlimit())
 
                     except Exception as e:
                         print(e)
