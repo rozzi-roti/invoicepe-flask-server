@@ -292,7 +292,7 @@ def make_forecast(data):
 
                 predictions = process_dataframe(predictions, min)
 
-                json_data = predictions.to_json(orient="records")
+                json_data = predictions.to_json(default_handler=str, orient="records")
 
                 return json_data
         except Exception as e:
@@ -373,7 +373,7 @@ def make_short_forecast(data):
 
         predictions = process_dataframe(predictions, min)
 
-        json_data = predictions.to_json(orient="records")
+        json_data = predictions.to_json(default_handler=str, orient="records")
 
         return json_data
 
@@ -410,7 +410,7 @@ def make_short_forecast(data):
 
         predictions = process_dataframe(predictions, min)
 
-        json_data = predictions.to_json(orient="records")
+        json_data = predictions.to_json(default_handler=str, orient="records")
 
         return json_data
 
