@@ -1,0 +1,17 @@
+version: 1.0
+app: 
+  name: InvoicePe Flask Server
+build:
+  runtime: python
+  command:
+    - sudo apt-get update 
+    - sudo apt-get -y install gcc
+    - sudo apt-get update -qqy && apt-get install -qqy
+    - sudo apt-get update tesseract-ocr && apt-get install tesseract-ocr
+    - sudo apt-get update libtesseract-dev && apt-get install libtesseract-dev
+    - pip3 install --upgrade pip
+    - pip3 install -r requirements.txt
+run:
+  runtime: python
+  command: exec gunicorn --config config.py -w 8 --worker-class gevent --preload -b 0.0.0.0:5000 app:app
+  port: 5000
