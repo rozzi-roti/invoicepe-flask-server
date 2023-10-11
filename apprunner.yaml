@@ -11,7 +11,7 @@ build:
       - pip3 install --upgrade pip
       - pip3 install -r requirements.txt
 run:
-  runtime-version: 3.11.5
+  runtime-version: 3.8.16
   command: exec gunicorn --config config.py -w 8 --worker-class gevent --preload -b 0.0.0.0:5000 app:app
   network:
     port: 5000
