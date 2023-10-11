@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.11.1-slim-buster
+FROM python:3.8.1-slim-buster
 
 # Allow statements and log messages to immediately appear in the logs
 WORKDIR /python-docker
