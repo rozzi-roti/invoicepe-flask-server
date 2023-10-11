@@ -174,6 +174,7 @@ def make_forecast(data):
                     yearly_seasonality=False,
                     weekly_seasonality=True,
                     daily_seasonality=False,
+                    growth="linear",
                     add_seasonality={
                         "name": "monthly",
                         "period": 30.5,
@@ -189,6 +190,7 @@ def make_forecast(data):
                     yearly_seasonality=False,
                     weekly_seasonality=True,
                     daily_seasonality=False,
+                    growth="linear",
                     add_seasonality={
                         "name": "monthly",
                         "period": 30.5,
@@ -269,6 +271,7 @@ def make_forecast(data):
                     seasonality_mode="multiplicative",
                     n_changepoints=4,
                     yearly_seasonality=False,
+                    growth="linear",
                     weekly_seasonality=True,
                     daily_seasonality=False,
                     add_seasonality={
@@ -348,6 +351,7 @@ def make_short_forecast(data):
             yearly_seasonality=False,
             weekly_seasonality=True,
             daily_seasonality=False,
+            growth="linear",
         )
         forecaster = Prophet(
             add_country_holidays={"country_name": "India"},
@@ -355,6 +359,7 @@ def make_short_forecast(data):
             n_changepoints=4,
             yearly_seasonality=False,
             weekly_seasonality=True,
+            growth="linear",
             daily_seasonality=False,
         )
 
@@ -396,6 +401,7 @@ def make_short_forecast(data):
             seasonality_mode="multiplicative",
             n_changepoints=4,
             yearly_seasonality=False,
+            growth="linear",
             weekly_seasonality=True,
             daily_seasonality=False,
         )
