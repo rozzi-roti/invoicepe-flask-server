@@ -8,8 +8,8 @@ build:
       - sudo yum update -y -qqy && yum install -y -qqy
       - sudo yum update -y tesseract-ocr && yum install -y tesseract-ocr
       - sudo yum update -y libtesseract-dev && yum install -y libtesseract-dev
-      - pip3 install -y --upgrade pip
-      - pip3 install -y -r requirements.txt
+      - pip3 install --upgrade pip
+      - pip3 install -r requirements.txt
 run:
   runtime-version: 3.8.16
   command: exec gunicorn --config config.py -w 8 --worker-class gevent --preload -b 0.0.0.0:5000 app:app
