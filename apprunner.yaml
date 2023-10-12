@@ -5,9 +5,9 @@ build:
     build:
       - sudo yum -y update
       - sudo yum -y install gcc
-      - sudo yum update -y -qqy && yum install -y -qqy
-      - sudo yum update -y tesseract-ocr && yum install -y tesseract-ocr
-      - sudo yum update -y libtesseract-dev && yum install -y libtesseract-dev
+      - sudo yum install -y -qqy
+      - sudo yum install -y tesseract-ocr
+      - sudo yum install -y libtesseract-dev
       - pip3 install --upgrade pip
       - pip3 install -r requirements.txt
 run:
