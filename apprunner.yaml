@@ -5,8 +5,15 @@ build:
     build:
       - sudo yum -y update
       - sudo yum -y install gcc
-      - sudo yum install -y tesseract-ocr
-      - sudo yum install -y libtesseract-dev
+      - sudo yum install -y git libtool clang gcc-c++.x86_64
+      - sudo yum install -y zlib zlib-devel libjpeg libjpeg-devel libwebp libwebp-devel libtiff libtiff-devel libpng libpng-devel
+      - cp /usr/lib64/libjpeg.so.62 /usr/local/lib/
+      - cp /usr/lib64/libwebp.so.4 /usr/local/lib/
+      - cp /usr/lib64/libtiff.so.5 /usr/local/lib/
+      - cp /usr/lib64/libpng15.so.15 /usr/local/lib/
+      - sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      - sudo yum -y update
+      - sudo yum install -y tesseract
       - pip3 install --upgrade pip
       - pip3 install -r requirements.txt
 run:
