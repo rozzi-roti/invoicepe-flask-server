@@ -15,9 +15,9 @@ build:
       - sudo yum -y update
       - sudo yum install -y tesseract
       - sudo yum -y install mesa-libGL
-      - pip3 install --upgrade pip
+      - sudo yum -y install python3.8-devel 
       - pip3 install wheel
-      - pip3 install --upgrade pip setuptools wheel
+      - pip3 install --upgrade setuptools wheel
       - pip3 install -r requirements.txt
 run:
   runtime-version: 3.8.16
