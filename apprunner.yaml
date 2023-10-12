@@ -14,7 +14,10 @@ build:
       - sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
       - sudo yum -y update
       - sudo yum install -y tesseract
+      - sudo yum -y install libgl1-mesa-glx
       - pip3 install --upgrade pip
+      - pip3 install -y wheel
+      - pip3 install --upgrade pip setuptools wheel
       - pip3 install -r requirements.txt
 run:
   runtime-version: 3.8.16
