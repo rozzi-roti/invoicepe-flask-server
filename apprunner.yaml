@@ -13,7 +13,6 @@ build:
       - cp /usr/lib64/libtiff.so.5 /usr/local/lib/
       - cp /usr/lib64/libpng15.so.15 /usr/local/lib/
       - sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-      - sudo yum -y update
       - sudo yum install -y tesseract
       - sudo yum -y install mesa-libGL
       - sudo yum -y install python38-devel
