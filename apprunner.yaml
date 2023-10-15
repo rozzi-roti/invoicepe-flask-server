@@ -5,7 +5,7 @@ build:
     build:
       - sudo yum -y update
       - sudo yum -y install gcc
-      - sudo yum install gcc-c++
+      - sudo yum -y install gcc-c++
       - sudo yum install -y git libtool clang gcc-c++.x86_64
       - sudo yum install -y zlib zlib-devel libjpeg libjpeg-devel libwebp libwebp-devel libtiff libtiff-devel libpng libpng-devel
       - cp /usr/lib64/libjpeg.so.62 /usr/local/lib/
