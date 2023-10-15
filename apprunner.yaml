@@ -15,7 +15,6 @@ build:
       - sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
       - sudo yum install -y tesseract
       - sudo yum -y install mesa-libGL
-      - sudo yum -y install centos-release-scl-rh
       - sudo yum -y install python3-devel
       - pip3 install wheel
       - pip3 install --upgrade setuptools wheel
